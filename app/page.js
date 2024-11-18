@@ -26,9 +26,6 @@ const HomePage = () => {
 
     const data = await res.json();
 
-    console.log("Fetched Transactions Response:", data);
-    setTransactions(data);
-
     // Categorize transactions dynamically by merchant name
     const categorizedTransactions = {};
     data.forEach((transaction) => {
@@ -52,53 +49,77 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-2xl font-bold mb-6">Connect Your Bank Account</h1>
-      <PlaidButton
-        onTokenExchanged={(token) => {
-          console.log("Access Token Set in HomePage:", token); // Debugging
-          setAccessToken(token);
-        }}
-      />
+    <div className="min-h-screen bg-gray-100 p-6">
+      <header className="max-w-4xl mx-auto text-center mb-8">
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          Bank Transaction Tracker
+        </h1>
+        <p className="text-gray-600">
+          Connect your bank account and track your spending by merchants.
+        </p>
+      </header>
 
-      <button
-        onClick={fetchTransactions}
-        className={`px-4 py-2 mt-4 font-semibold text-white ${
-          accessToken
-            ? "bg-green-500 hover:bg-green-600"
-            : "bg-red-500 hover:bg-red-600"
-        } rounded`}
-      >
-        Fetch Transactions
-      </button>
-
-      {/* Render all categorized transactions */}
-      <div className="w-full max-w-4xl mt-6">
-        {Object.keys(categories.merchants || {}).map((merchant) => (
-          <div key={merchant} className="mb-8">
-            <h2 className="text-lg font-bold mb-2">{merchant}</h2>
-            <p className="text-sm text-gray-500">
-              Total Spent: ${categories.totals[merchant].toFixed(2)}
-            </p>
-            <ul className="list-disc list-inside">
-              {categories.merchants[merchant].map((tx) => (
-                <li key={tx.transaction_id} className="mb-2">
-                  <img
-                    src={tx.logo_url || "https://via.placeholder.com/50"}
-                    alt={tx.name}
-                    className="inline-block mr-2 w-8 h-8 rounded"
-                  />
-                  <strong>{tx.name || "Unknown Merchant"}</strong> - $
-                  {tx.amount.toFixed(2)} <br />
-                  <span className="text-sm text-gray-500">
-                    {tx.date} | {tx.category?.join(", ") || "Uncategorized"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      <div className="max-w-4xl mx-auto mb-6">
+        <PlaidButton
+          onTokenExchanged={(token) => {
+            console.log("Access Token Set in HomePage:", token); // Debugging
+            setAccessToken(token);
+          }}
+        />
+        <button
+          onClick={fetchTransactions}
+          className={`w-full mt-4 py-3 font-semibold text-white rounded ${
+            accessToken
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
+        >
+          Fetch Transactions
+        </button>
       </div>
+
+      <main className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Object.keys(categories.merchants || {}).map((merchant) => (
+            <div
+              key={merchant}
+              className="bg-white shadow-md rounded-lg p-6 border-t-4 border-blue-500"
+            >
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
+                {merchant}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Total Spent:{" "}
+                <span className="font-semibold">
+                  ${categories.totals[merchant].toFixed(2)}
+                </span>
+              </p>
+              <ul className="space-y-3">
+                {categories.merchants[merchant].map((tx) => (
+                  <li
+                    key={tx.transaction_id}
+                    className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
+                  >
+                    <img
+                      src={tx.logo_url || "https://via.placeholder.com/50"}
+                      alt={tx.name}
+                      className="w-12 h-12 rounded"
+                    />
+                    <div>
+                      <h3 className="font-medium text-gray-800">
+                        {tx.name || "Unknown Merchant"}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {tx.date} | ${tx.amount.toFixed(2)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 };
