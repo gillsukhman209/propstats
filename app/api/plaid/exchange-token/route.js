@@ -1,8 +1,7 @@
-// app/api/plaid/exchange-token/route.js
 import { Configuration, PlaidApi, PlaidEnvironments } from "plaid";
 
-const config = new Configuration({
-  basePath: PlaidEnvironments[process.env.PLAID_ENV],
+const configuration = new Configuration({
+  basePath: PlaidEnvironments.sandbox,
   baseOptions: {
     headers: {
       "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
@@ -10,21 +9,30 @@ const config = new Configuration({
     },
   },
 });
-const plaidClient = new PlaidApi(config);
+
+const plaidClient = new PlaidApi(configuration);
 
 export async function POST(req) {
-  const { public_token } = await req.json();
   try {
+    const { public_token } = await req.json();
+    console.log("Public Token Received in API:", public_token);
+
     const response = await plaidClient.itemPublicTokenExchange({
       public_token,
     });
+
+    console.log(
+      "Access Token Received from Plaid:",
+      response.data.access_token
+    );
+
     return new Response(
       JSON.stringify({ access_token: response.data.access_token }),
-      { status: 200 }
+      { headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error exchanging token:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Error in Token Exchange API:", error);
+    return new Response(JSON.stringify({ error: "Failed to exchange token" }), {
       status: 500,
     });
   }

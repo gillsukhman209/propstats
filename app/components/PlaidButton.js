@@ -4,7 +4,6 @@ import { useState } from "react";
 import { usePlaidLink } from "react-plaid-link";
 
 const PlaidButton = ({ onTokenExchanged }) => {
-  console.log("hello plaid?");
   const [linkToken, setLinkToken] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -27,20 +26,18 @@ const PlaidButton = ({ onTokenExchanged }) => {
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: async (public_token, metadata) => {
-      console.log("Public Token Received:", public_token); // Debugging
-      console.log("Metadata:", metadata); // Debugging
-    },
-    onExit: (error, metadata) => {
-      if (error) console.error("Error exiting Plaid Link:", error); // Debugging
-      console.log("Exited Plaid Link with metadata:", metadata); // Debugging
+      const res = await fetch("/api/plaid/exchange-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ public_token }),
+      });
+
+      const data = await res.json();
+      console.log("Access Token (PlaidButton):", data.access_token);
+
+      onTokenExchanged(data.access_token);
     },
   });
-
-  console.log("Link Token in Hook:", linkToken); // Debugging
-  console.log("Ready State in Hook:", ready); // Debugging
-
-  console.log("Link Token:", linkToken); // Debugging
-  console.log("Ready:", ready); // Debugging
 
   return (
     <button

@@ -1,8 +1,8 @@
-// app/api/plaid/transactions/route.js
 import { Configuration, PlaidApi, PlaidEnvironments } from "plaid";
+import { NextResponse } from "next/server";
 
-const config = new Configuration({
-  basePath: PlaidEnvironments[process.env.PLAID_ENV],
+const configuration = new Configuration({
+  basePath: PlaidEnvironments.sandbox, // Use 'sandbox' for testing
   baseOptions: {
     headers: {
       "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
@@ -10,26 +10,37 @@ const config = new Configuration({
     },
   },
 });
-const plaidClient = new PlaidApi(config);
+
+const plaidClient = new PlaidApi(configuration);
 
 export async function POST(req) {
-  const { access_token, start_date, end_date, merchant } = await req.json();
+  const { access_token, start_date, end_date } = await req.json();
+
+  console.log("Access Token:", access_token);
+  console.log("Start Date:", start_date);
+  console.log("End Date:", end_date);
+
   try {
+    console.log("Fetching all transactions from Plaid API...");
+
     const response = await plaidClient.transactionsGet({
       access_token,
       start_date,
       end_date,
     });
 
-    const filteredTransactions = response.data.transactions.filter((tx) =>
-      tx.name.toLowerCase().includes(merchant.toLowerCase())
-    );
+    const transactions = response.data.transactions;
+    console.log("Fetched Transactions:", transactions);
 
-    return new Response(JSON.stringify(filteredTransactions), { status: 200 });
+    return NextResponse.json(transactions);
   } catch (error) {
-    console.error("Error fetching transactions:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-    });
+    console.error(
+      "Error fetching transactions:",
+      error.response?.data || error
+    );
+    return NextResponse.json(
+      { error: "Failed to fetch transactions" },
+      { status: 500 }
+    );
   }
 }
