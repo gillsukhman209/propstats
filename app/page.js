@@ -43,24 +43,43 @@ const HomePage = () => {
 
     // Calculate total spending for each category
     const totals = {};
+    const evalTotals = {};
+    const notEvalTotals = {};
+    let totalEval = 0;
+    let totalNotEval = 0;
     for (const merchant in categorizedTransactions) {
       totals[merchant] = categorizedTransactions[merchant].reduce(
         (sum, tx) => sum + tx.amount,
         0
       );
+      evalTotals[merchant] = categorizedTransactions[merchant].reduce(
+        (sum, tx) => (tx.eval ? sum + tx.amount : sum),
+        0
+      );
+      notEvalTotals[merchant] = categorizedTransactions[merchant].reduce(
+        (sum, tx) => (!tx.eval ? sum + tx.amount : sum),
+        0
+      );
+      totalEval += evalTotals[merchant];
+      totalNotEval += notEvalTotals[merchant];
     }
 
-    setCategories({ merchants: categorizedTransactions, totals });
+    setCategories({
+      merchants: categorizedTransactions,
+      totals,
+      evalTotals,
+      notEvalTotals,
+      totalEval,
+      totalNotEval,
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <header className="max-w-4xl mx-auto text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-4">
-          Propfirm Stats
-        </h1>
-        <p className="text-gray-600">
-          Connect your bank account and track your spending by merchants.
+    <div className="min-h-screen bg-gray-900 w-full text-white p-6">
+      <header className="max-w-4xl mx-auto text-center mb-8 ">
+        <h1 className="text-4xl font-bold text-white mb-4">Propfirm Stats</h1>
+        <p className="text-gray-600 text-lg">
+          Track your prop firm stats in seconds
         </p>
       </header>
 
@@ -73,7 +92,7 @@ const HomePage = () => {
         />
         <button
           onClick={fetchTransactions}
-          className={`w-full mt-4 py-3 font-semibold text-white rounded ${
+          className={`w-[20%] ml-4 mt-4 py-3 font-semibold text-white rounded ${
             accessToken
               ? "bg-blue-600 hover:bg-blue-700"
               : "bg-gray-400 cursor-not-allowed"
@@ -81,6 +100,23 @@ const HomePage = () => {
         >
           Fetch Transactions
         </button>
+        <div className="text-center mt-4">
+          <p className="text-lg text-red-400 mb-4">
+            Evals cost:{" "}
+            <span className="font-semibold text-2xl">
+              ${categories.totalEval ? categories.totalEval.toFixed(2) : "0.00"}
+            </span>
+          </p>
+          <p className="text-lg text-green-400 mb-4">
+            Total Payouts:{" "}
+            <span className="font-semibold text-2xl">
+              $
+              {categories.totalNotEval
+                ? categories.totalNotEval.toFixed(2)
+                : "0.00"}
+            </span>
+          </p>
+        </div>
       </div>
 
       <main className="max-w-6xl mx-auto">
@@ -99,6 +135,18 @@ const HomePage = () => {
                   ${categories.totals[merchant].toFixed(2)}
                 </span>
               </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Eval Total:{" "}
+                <span className="font-semibold">
+                  ${categories.evalTotals[merchant].toFixed(2)}
+                </span>
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Payout:{" "}
+                <span className="font-semibold">
+                  ${categories.notEvalTotals[merchant].toFixed(2)}
+                </span>
+              </p>
               <ul className="space-y-3">
                 {categories.merchants[merchant].map((tx) => (
                   <li
@@ -108,14 +156,15 @@ const HomePage = () => {
                     <img
                       src={tx.logo_url || "https://via.placeholder.com/50"}
                       alt={tx.name}
-                      className="w-12 h-12 rounded"
+                      className="w-20 h-12 rounded"
                     />
                     <div>
                       <h3 className="font-medium text-gray-800">
                         {tx.name || "Unknown Merchant"}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {tx.date} | ${tx.amount.toFixed(2)}
+                        {tx.date} | ${tx.amount.toFixed(2)} | Eval:{" "}
+                        {tx.eval ? "Yes" : "No"}
                       </p>
                     </div>
                   </li>
