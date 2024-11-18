@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden; /* Prevent unnecessary scrollbars */
+  background-color: #f5f5f5; /* Optional: Add a background color */
+}
+
+/* Add a wrapper to isolate the button */
+button {
+  z-index: 1; /* Ensure button appears above the Plaid UI */
+}
