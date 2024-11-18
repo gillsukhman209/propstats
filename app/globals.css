@@ -8,7 +8,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  overflow: hidden; /* Prevent unnecessary scrollbars */
+
   background-color: #f5f5f5; /* Optional: Add a background color */
 }
 
