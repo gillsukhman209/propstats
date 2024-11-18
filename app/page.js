@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import PlaidButton from "./components/PlaidButton";
+import customTransactions from "./transactions";
 
 const HomePage = () => {
   const [accessToken, setAccessToken] = useState(null);
@@ -26,9 +27,13 @@ const HomePage = () => {
 
     const data = await res.json();
 
+    const updatedTransactions = [...customTransactions];
+
+    // Update state
+
     // Categorize transactions dynamically by merchant name
     const categorizedTransactions = {};
-    data.forEach((transaction) => {
+    updatedTransactions.forEach((transaction) => {
       const merchant = transaction.merchant_name || "Unknown Merchant";
       if (!categorizedTransactions[merchant]) {
         categorizedTransactions[merchant] = [];
@@ -52,7 +57,7 @@ const HomePage = () => {
     <div className="min-h-screen bg-gray-100 p-6">
       <header className="max-w-4xl mx-auto text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">
-          Bank Transaction Tracker
+          Propfirm Stats
         </h1>
         <p className="text-gray-600">
           Connect your bank account and track your spending by merchants.
