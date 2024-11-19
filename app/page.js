@@ -41,6 +41,15 @@ const HomePage = () => {
       console.error("No access token available!");
       return;
     }
+    const response = await axios
+      .get(`/api/mongo/getToken?email=${session?.user?.email}`)
+      .then((res) => {
+        console.log("successfully fetched token");
+        setAccessToken(res.data.accessToken);
+      })
+      .catch((err) => {
+        console.log("error fetching token", err);
+      });
 
     const res = await fetch("/api/plaid/transactions", {
       method: "POST",
@@ -51,19 +60,7 @@ const HomePage = () => {
         end_date: "2024-11-17",
       }),
     });
-
     const data = await res.json();
-
-    console.log("data is ", data);
-
-    // axios
-    //   .post("/api/plaid/saveTransactions", data)
-    //   .then((req) => {
-    //     console.log("successfully made the call", req);
-    //   })
-    //   .then((error) => {
-    //     console.log("error saving trans", error);
-    //   });
 
     const updatedTransactions = [...customTransactions, ...data];
 
