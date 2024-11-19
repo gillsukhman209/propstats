@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { usePlaidLink } from "react-plaid-link";
 
 const PlaidButton = ({ onTokenExchanged }) => {
   const [linkToken, setLinkToken] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      console.log("Current User Email:", session.user.email);
+    }
+  }, [status, session]);
 
   const fetchLinkToken = async () => {
     console.log("Fetching Link Token..."); // Should appear when button is clicked
@@ -34,6 +42,22 @@ const PlaidButton = ({ onTokenExchanged }) => {
 
       const data = await res.json();
       console.log("Access Token (PlaidButton):", data.access_token);
+      const token = data.access_token;
+      // Update access token in database
+      await fetch("/api/mongo/updateToken", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: session.user.email,
+          newAccessToken: token,
+        }),
+      })
+        .then((res) => {
+          console.log("access token updates successfully", res);
+        })
+        .catch((error) => {
+          console.log("error updating the token");
+        });
 
       onTokenExchanged(data.access_token);
     },

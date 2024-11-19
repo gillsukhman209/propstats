@@ -1,13 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import PlaidButton from "./components/PlaidButton";
 import customTransactions from "./transactions";
+import axios from "axios";
 
 const HomePage = () => {
-  const [accessToken, setAccessToken] = useState(null);
+  const { data: session, status } = useSession();
+  const [accessToken, setAccessToken] = useState("empty access token");
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState({});
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      signIn(); // Redirects to the login page
+    } else if (status === "authenticated") {
+      addUserToDB();
+    }
+  }, [status, session]);
+
+  const addUserToDB = async () => {
+    console.log(
+      "about to add user to database",
+      session.user.email,
+      accessToken
+    );
+    try {
+      await axios.post("/api/mongo/createUser", {
+        email: session?.user?.email,
+
+        accessToken: accessToken,
+      });
+    } catch (error) {
+      console.error("Error adding user to DB:", error);
+    }
+  };
 
   const fetchTransactions = async () => {
     if (!accessToken) {
@@ -27,9 +54,18 @@ const HomePage = () => {
 
     const data = await res.json();
 
-    const updatedTransactions = [...customTransactions];
+    console.log("data is ", data);
 
-    // Update state
+    // axios
+    //   .post("/api/plaid/saveTransactions", data)
+    //   .then((req) => {
+    //     console.log("successfully made the call", req);
+    //   })
+    //   .then((error) => {
+    //     console.log("error saving trans", error);
+    //   });
+
+    const updatedTransactions = [...customTransactions, ...data];
 
     // Categorize transactions dynamically by merchant name
     const categorizedTransactions = {};
@@ -74,12 +110,20 @@ const HomePage = () => {
     });
   };
 
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-900 w-full text-white flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 w-full text-white p-6">
       <header className="max-w-4xl mx-auto text-center mb-8 ">
         <h1 className="text-4xl font-bold text-white mb-4">Propfirm Stats</h1>
         <p className="text-gray-600 text-lg">
-          Track your prop firm stats in seconds
+          Track your prop firm stats in seconds{" "}
         </p>
       </header>
 
@@ -99,6 +143,18 @@ const HomePage = () => {
           }`}
         >
           Fetch Transactions
+        </button>
+        <button
+          onClick={() => signOut()}
+          className="w-[20%] ml-4 mt-4 py-3 font-semibold text-white rounded bg-red-600 hover:bg-red-700"
+        >
+          Logout
+        </button>
+        <button
+          onClick={addUserToDB}
+          className="w-[20%] ml-4 mt-4 py-3 font-semibold text-white rounded bg-green-600 hover:bg-green-700"
+        >
+          Add User
         </button>
         <div className="text-center mt-4">
           <p className="text-lg text-red-400 mb-4">

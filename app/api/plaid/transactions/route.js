@@ -1,5 +1,7 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from "plaid";
 import { NextResponse } from "next/server";
+import Transaction from "../../../../models/transactions";
+import connectToDatabase from "../../../../lib/db";
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments.sandbox, // Use 'sandbox' for testing
@@ -15,7 +17,7 @@ const plaidClient = new PlaidApi(configuration);
 
 export async function POST(req) {
   const { access_token, start_date, end_date } = await req.json();
-
+  await connectToDatabase();
   console.log("Access Token:", access_token);
   console.log("Start Date:", start_date);
   console.log("End Date:", end_date);
@@ -30,7 +32,13 @@ export async function POST(req) {
     });
 
     const transactions = response.data.transactions;
-    console.log("Fetched Transactions:", transactions);
+    await Transaction.insertMany(transactions)
+      .then(() => {
+        console.log("Successfully saved the transactions to mongodb");
+      })
+      .catch((error) => {
+        console.error("error saving transactions to mongodb", error);
+      });
 
     return NextResponse.json(transactions);
   } catch (error) {
