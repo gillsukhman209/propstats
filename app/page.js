@@ -12,11 +12,16 @@ const HomePage = () => {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState({});
   useEffect(() => {
-    if (status === "unauthenticated") {
-      signIn(); // Redirects to the login page
-    } else if (status === "authenticated") {
-      addUserToDB();
-    }
+    const handleUserAuthentication = async () => {
+      if (status === "unauthenticated") {
+        signIn(); // Redirects to the login page
+      } else if (status === "authenticated" && session) {
+        await addUserToDB();
+        await fetchTransactions();
+      }
+    };
+
+    handleUserAuthentication(); // Call the async function
   }, [status, session]);
 
   const addUserToDB = async () => {
@@ -37,74 +42,87 @@ const HomePage = () => {
   };
 
   const fetchTransactions = async () => {
-    if (!accessToken) {
-      console.error("No access token available!");
-      return;
+    let tokenToUse = accessToken;
+
+    // If `accessToken` is empty or needs to be fetched from the database
+    if (!accessToken || accessToken === "empty access token") {
+      console.log("Fetching access token from database...");
+      try {
+        const res = await axios.get(
+          `/api/mongo/getToken?email=${session?.user?.email}`
+        );
+        console.log("Successfully fetched token:", res.data.accessToken);
+        tokenToUse = res.data.accessToken; // Use a local variable
+        setAccessToken(res.data.accessToken); // Update state for future use
+      } catch (err) {
+        console.error("Error fetching token:", err);
+        return; // Exit if token fetch fails
+      }
     }
-    const response = await axios
-      .get(`/api/mongo/getToken?email=${session?.user?.email}`)
-      .then((res) => {
-        console.log("successfully fetched token");
-        setAccessToken(res.data.accessToken);
-      })
-      .catch((err) => {
-        console.log("error fetching token", err);
+
+    console.log("Using Access Token:", tokenToUse);
+
+    try {
+      const res = await fetch("/api/plaid/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: tokenToUse, // Explicitly use the local variable
+          start_date: "2000-01-01",
+          end_date: "2024-11-17",
+        }),
       });
 
-    const res = await fetch("/api/plaid/transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        access_token: accessToken,
-        start_date: "2000-01-01",
-        end_date: "2024-11-17",
-      }),
-    });
-    const data = await res.json();
+      const data = await res.json();
+      console.log("Fetched transactions:", data);
 
-    const updatedTransactions = [...customTransactions, ...data];
+      const updatedTransactions = [...customTransactions, ...data];
+      console.log("Fetched and Merged Transactions:", updatedTransactions);
 
-    // Categorize transactions dynamically by merchant name
-    const categorizedTransactions = {};
-    updatedTransactions.forEach((transaction) => {
-      const merchant = transaction.merchant_name || "Unknown Merchant";
-      if (!categorizedTransactions[merchant]) {
-        categorizedTransactions[merchant] = [];
+      // Categorize transactions dynamically by merchant name
+      const categorizedTransactions = {};
+      updatedTransactions.forEach((transaction) => {
+        const merchant = transaction.merchant_name || "Unknown Merchant";
+        if (!categorizedTransactions[merchant]) {
+          categorizedTransactions[merchant] = [];
+        }
+        categorizedTransactions[merchant].push(transaction);
+      });
+
+      // Calculate total spending for each category
+      const totals = {};
+      const evalTotals = {};
+      const notEvalTotals = {};
+      let totalEval = 0;
+      let totalNotEval = 0;
+      for (const merchant in categorizedTransactions) {
+        totals[merchant] = categorizedTransactions[merchant].reduce(
+          (sum, tx) => sum + tx.amount,
+          0
+        );
+        evalTotals[merchant] = categorizedTransactions[merchant].reduce(
+          (sum, tx) => (tx.eval ? sum + tx.amount : sum),
+          0
+        );
+        notEvalTotals[merchant] = categorizedTransactions[merchant].reduce(
+          (sum, tx) => (!tx.eval ? sum + tx.amount : sum),
+          0
+        );
+        totalEval += evalTotals[merchant];
+        totalNotEval += notEvalTotals[merchant];
       }
-      categorizedTransactions[merchant].push(transaction);
-    });
 
-    // Calculate total spending for each category
-    const totals = {};
-    const evalTotals = {};
-    const notEvalTotals = {};
-    let totalEval = 0;
-    let totalNotEval = 0;
-    for (const merchant in categorizedTransactions) {
-      totals[merchant] = categorizedTransactions[merchant].reduce(
-        (sum, tx) => sum + tx.amount,
-        0
-      );
-      evalTotals[merchant] = categorizedTransactions[merchant].reduce(
-        (sum, tx) => (tx.eval ? sum + tx.amount : sum),
-        0
-      );
-      notEvalTotals[merchant] = categorizedTransactions[merchant].reduce(
-        (sum, tx) => (!tx.eval ? sum + tx.amount : sum),
-        0
-      );
-      totalEval += evalTotals[merchant];
-      totalNotEval += notEvalTotals[merchant];
+      setCategories({
+        merchants: categorizedTransactions,
+        totals,
+        evalTotals,
+        notEvalTotals,
+        totalEval,
+        totalNotEval,
+      });
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
     }
-
-    setCategories({
-      merchants: categorizedTransactions,
-      totals,
-      evalTotals,
-      notEvalTotals,
-      totalEval,
-      totalNotEval,
-    });
   };
 
   if (status === "loading") {
@@ -147,12 +165,7 @@ const HomePage = () => {
         >
           Logout
         </button>
-        <button
-          onClick={addUserToDB}
-          className="w-[20%] ml-4 mt-4 py-3 font-semibold text-white rounded bg-green-600 hover:bg-green-700"
-        >
-          Add User
-        </button>
+
         <div className="text-center mt-4">
           <p className="text-lg text-red-400 mb-4">
             Evals cost:{" "}
@@ -201,9 +214,9 @@ const HomePage = () => {
                 </span>
               </p>
               <ul className="space-y-3">
-                {categories.merchants[merchant].map((tx) => (
+                {categories.merchants[merchant].map((tx, index) => (
                   <li
-                    key={tx.transaction_id}
+                    key={tx.transaction_id || index} // Use `transaction_id` or fallback to index
                     className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
                   >
                     <img
