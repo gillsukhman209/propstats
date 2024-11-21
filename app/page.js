@@ -115,6 +115,11 @@ const HomePage = () => {
         totalNotEval += notEvalTotals[merchant];
       }
 
+      // Adjust total spent based on the new logic
+      for (const merchant in totals) {
+        totals[merchant] = notEvalTotals[merchant] - evalTotals[merchant];
+      }
+
       setCategories({
         merchants: categorizedTransactions,
         totals,
