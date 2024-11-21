@@ -15,7 +15,7 @@ const plaidClient = new PlaidApi(config);
 export async function GET() {
   try {
     const response = await plaidClient.linkTokenCreate({
-      user: { client_user_id: session.user.email || "unique-user-id" },
+      user: { client_user_id: "user_id" },
       client_name: "Your App Name",
       products: process.env.PLAID_PRODUCTS.split(","),
       country_codes: process.env.PLAID_COUNTRY_CODES.split(","),

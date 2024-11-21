@@ -10,7 +10,7 @@ import Card from "./components/Card";
 
 const HomePage = () => {
   const { data: session, status } = useSession();
-  const [accessToken, setAccessToken] = useState("empty access token");
+  const [accessToken, setAccessToken] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState({});
   useEffect(() => {
@@ -146,13 +146,15 @@ const HomePage = () => {
       <header className="max-w-full mx-auto text-center mb-8 flex flex-row justify-around items-center px-4 ">
         <h1 className="text-4xl font-bold text-white mb-4">Propfirm Stats</h1>
         <div className="flex flex-row justify-end space-x-4 h-14">
-          <PlaidButton
-            onTokenExchanged={(token) => {
-              console.log("Access Token Set in HomePage:", token); // Debugging
-              setAccessToken(token);
-            }}
-            className="font-semibold text-white rounded-lg bg-gradient px-4 py-2"
-          />
+          {!accessToken && (
+            <PlaidButton
+              onTokenExchanged={(token) => {
+                console.log("Access Token Set in HomePage:", token); // Debugging
+                setAccessToken(token);
+              }}
+              className="font-semibold text-white rounded-lg bg-gradient px-4 py-2"
+            />
+          )}
           <button
             onClick={fetchTransactions}
             className={`font-semibold text-white  border-2 border-white rounded-lg px-4 py-2 ${
@@ -161,7 +163,7 @@ const HomePage = () => {
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >
-            Fetch Transactions
+            Sync transactions
           </button>
           <button
             onClick={() => signOut()}
