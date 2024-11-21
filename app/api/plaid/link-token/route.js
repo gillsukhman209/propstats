@@ -15,12 +15,13 @@ const plaidClient = new PlaidApi(config);
 export async function GET() {
   try {
     const response = await plaidClient.linkTokenCreate({
-      user: { client_user_id: "user-id" }, // Use the authenticated user ID
+      user: { client_user_id: session.user.email || "unique-user-id" },
       client_name: "Your App Name",
       products: process.env.PLAID_PRODUCTS.split(","),
       country_codes: process.env.PLAID_COUNTRY_CODES.split(","),
       language: "en",
     });
+
     return new Response(JSON.stringify(response.data), { status: 200 });
   } catch (error) {
     console.error("Error creating link token:", error);

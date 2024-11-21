@@ -5,6 +5,8 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import PlaidButton from "./components/PlaidButton";
 import customTransactions from "./transactions";
 import axios from "axios";
+import { FaSignOutAlt } from "react-icons/fa";
+import Card from "./components/Card";
 
 const HomePage = () => {
   const { data: session, status } = useSession();
@@ -76,7 +78,8 @@ const HomePage = () => {
       const data = await res.json();
       console.log("Fetched transactions:", data);
 
-      const updatedTransactions = [...customTransactions, ...data];
+      const updatedTransactions = [...customTransactions];
+      // const updatedTransactions = [...customTransactions, ...data];
       console.log("Fetched and Merged Transactions:", updatedTransactions);
 
       // Categorize transactions dynamically by merchant name
@@ -134,38 +137,37 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 w-full text-white p-6">
-      <header className="max-w-4xl mx-auto text-center mb-8 ">
+    <div className="min-h-screen bg-gradient-to-b from-[#03030E] to-[#2A2E48] w-full text-white p-6">
+      <header className="max-w-full mx-auto text-center mb-8 flex flex-row justify-around items-center px-4">
         <h1 className="text-4xl font-bold text-white mb-4">Propfirm Stats</h1>
-        <p className="text-gray-600 text-lg">
-          Track your prop firm stats in seconds{" "}
-        </p>
+        <div className="flex flex-row justify-end space-x-4 h-14">
+          <PlaidButton
+            onTokenExchanged={(token) => {
+              console.log("Access Token Set in HomePage:", token); // Debugging
+              setAccessToken(token);
+            }}
+            className="font-semibold text-white rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2"
+          />
+          <button
+            onClick={fetchTransactions}
+            className={`font-semibold text-white rounded-lg px-4 py-2 ${
+              accessToken
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
+          >
+            Fetch Transactions
+          </button>
+          <button
+            onClick={() => signOut()}
+            className="font-semibold text-white rounded-lg px-6 flex items-center justify-center  py-2 bg-red-600 hover:bg-red-700"
+          >
+            <FaSignOutAlt className="mr-2" /> Logout
+          </button>
+        </div>
       </header>
 
-      <div className="max-w-4xl mx-auto mb-6">
-        <PlaidButton
-          onTokenExchanged={(token) => {
-            console.log("Access Token Set in HomePage:", token); // Debugging
-            setAccessToken(token);
-          }}
-        />
-        <button
-          onClick={fetchTransactions}
-          className={`w-[20%] ml-4 mt-4 py-3 font-semibold text-white rounded ${
-            accessToken
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-gray-400 cursor-not-allowed"
-          }`}
-        >
-          Fetch Transactions
-        </button>
-        <button
-          onClick={() => signOut()}
-          className="w-[20%] ml-4 mt-4 py-3 font-semibold text-white rounded bg-red-600 hover:bg-red-700"
-        >
-          Logout
-        </button>
-
+      {/* <div className="max-w-4xl mx-auto mb-6">
         <div className="text-center mt-4">
           <p className="text-lg text-red-400 mb-4">
             Evals cost:{" "}
@@ -183,60 +185,12 @@ const HomePage = () => {
             </span>
           </p>
         </div>
-      </div>
+      </div> */}
 
-      <main className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <main className="w-full h-screen  flex items-center justify-center">
+        <div className="flex flex-wrap w-full  justify-center items-center   ">
           {Object.keys(categories.merchants || {}).map((merchant) => (
-            <div
-              key={merchant}
-              className="bg-white shadow-md rounded-lg p-6 border-t-4 border-blue-500"
-            >
-              <h2 className="text-xl font-bold text-gray-800 mb-2">
-                {merchant}
-              </h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Total Spent:{" "}
-                <span className="font-semibold">
-                  ${categories.totals[merchant].toFixed(2)}
-                </span>
-              </p>
-              <p className="text-sm text-gray-500 mb-4">
-                Eval Total:{" "}
-                <span className="font-semibold">
-                  ${categories.evalTotals[merchant].toFixed(2)}
-                </span>
-              </p>
-              <p className="text-sm text-gray-500 mb-4">
-                Payout:{" "}
-                <span className="font-semibold">
-                  ${categories.notEvalTotals[merchant].toFixed(2)}
-                </span>
-              </p>
-              <ul className="space-y-3">
-                {categories.merchants[merchant].map((tx, index) => (
-                  <li
-                    key={tx.transaction_id || index} // Use `transaction_id` or fallback to index
-                    className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
-                  >
-                    <img
-                      src={tx.logo_url || "https://via.placeholder.com/50"}
-                      alt={tx.name}
-                      className="w-20 h-12 rounded"
-                    />
-                    <div>
-                      <h3 className="font-medium text-gray-800">
-                        {tx.name || "Unknown Merchant"}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {tx.date} | ${tx.amount.toFixed(2)} | Eval:{" "}
-                        {tx.eval ? "Yes" : "No"}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <Card categories={categories} merchant={merchant} key={merchant} />
           ))}
         </div>
       </main>

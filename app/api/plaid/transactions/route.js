@@ -32,13 +32,6 @@ export async function POST(req) {
     });
 
     const transactions = response.data.transactions;
-    await Transaction.insertMany(transactions)
-      .then(() => {
-        console.log("Successfully saved the transactions to mongodb");
-      })
-      .catch((error) => {
-        console.error("error saving transactions to mongodb", error);
-      });
 
     return NextResponse.json(transactions);
   } catch (error) {
