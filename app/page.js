@@ -142,60 +142,37 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#03030E] to-[#2A2E48] w-full text-white p-6">
-      <header className="max-w-full mx-auto text-center mb-8 flex flex-row justify-around items-center px-4 ">
-        <h1 className="text-4xl font-bold text-white mb-4">Propfirm Stats</h1>
-        <div className="flex flex-row justify-end space-x-4 h-14">
+    <div className="min-h-screen bg-gradient-to-b from-[#03030E] to-[#2A2E48] w-full text-white p-4 md:p-6">
+      <header className="max-w-full mx-auto text-center mb-6 flex flex-col md:flex-row justify-between items-center px-4 space-y-4 md:space-y-0">
+        <h1 className="text-3xl md:text-4xl font-bold text-white">
+          Propfirm Stats
+        </h1>
+        <div className="flex flex-wrap justify-center md:justify-end space-x-2 space-y-2 md:space-y-0">
           {!accessToken && (
             <PlaidButton
-              onTokenExchanged={(token) => {
-                console.log("Access Token Set in HomePage:", token); // Debugging
-                setAccessToken(token);
-              }}
-              className="font-semibold text-white rounded-lg bg-gradient px-4 py-2"
+              onTokenExchanged={(token) => setAccessToken(token)}
+              className="font-semibold text-white rounded-lg bg-gradient px-4 py-2 text-sm md:text-base"
             />
           )}
-          <button
-            onClick={fetchTransactions}
-            className={`font-semibold text-white  border-2 border-white rounded-lg px-4 py-2 ${
-              accessToken
-                ? "bg-gradient-to-r from-[#080a12] to-[#08083a8a]"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-          >
-            Sync transactions
-          </button>
-          <button
-            onClick={() => signOut()}
-            className="font-semibold  border-2 border-white text-white rounded-lg px-6 flex items-center justify-center py-2 bg-gradient-to-r from-[#080a12] to-[#08083a8a]"
-          >
-            <FaSignOutAlt className="mr-2" /> Logout
-          </button>
+          <div className="flex space-x-4">
+            <button
+              onClick={fetchTransactions}
+              className="h-12 w-40 text-center font-semibold text-white border-2 border-white rounded-lg bg-gradient-to-r from-[#080a12] to-[#08083a8a]"
+            >
+              Sync transactions
+            </button>
+            <button
+              onClick={() => signOut()}
+              className="h-12 w-40 text-center font-semibold text-white border-2 border-white rounded-lg bg-gradient-to-r from-[#080a12] to-[#08083a8a] flex items-center justify-center"
+            >
+              <FaSignOutAlt className="mr-2" /> Logout
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* <div className="max-w-4xl mx-auto mb-6">
-        <div className="text-center mt-4">
-          <p className="text-lg text-red-400 mb-4">
-            Evals cost:{" "}
-            <span className="font-semibold text-2xl">
-              ${categories.totalEval ? categories.totalEval.toFixed(2) : "0.00"}
-            </span>
-          </p>
-          <p className="text-lg text-green-400 mb-4">
-            Total Payouts:{" "}
-            <span className="font-semibold text-2xl">
-              $
-              {categories.totalNotEval
-                ? categories.totalNotEval.toFixed(2)
-                : "0.00"}
-            </span>
-          </p>
-        </div>
-      </div> */}
-
-      <main className="w-full h-screen  flex items-center justify-center">
-        <div className="flex flex-wrap w-full  justify-center items-center   ">
+      <main className="w-full h-auto flex items-center justify-center">
+        <div className="flex flex-wrap w-full justify-center items-center gap-4">
           {Object.keys(categories.merchants || {}).map((merchant) => (
             <Card categories={categories} merchant={merchant} key={merchant} />
           ))}
