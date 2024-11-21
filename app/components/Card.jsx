@@ -25,7 +25,7 @@ function Card({ categories, merchant }) {
             </span>
           </div>
           <div className="text-gray-500 mb-4 ">
-            <span>Payout:</span>
+            <span>Payouts:</span>
             <span className="font-semibold">
               ${categories.notEvalTotals[merchant].toFixed(2)}
             </span>
@@ -42,14 +42,14 @@ function Card({ categories, merchant }) {
                 alt={tx.name}
                 className="w-20 h-12 rounded"
               />
-              <div>
+              <div className="w-full flex justify-between ">
                 <h3 className="font-medium text-gray-800">
                   {tx.name || "Unknown Merchant"}
+                  <p className="text-gray-500 ">{tx.date}</p>
                 </h3>
-                <p className=" text-gray-500">
-                  {/* {tx.date} | ${tx.amount.toFixed(2)} | Eval:{" "} */}
-                  {tx.date} | ${tx.amount.toFixed(2)}
-                  {/* {tx.eval ? "Yes" : "No"} */}
+
+                <p className="text-gray-500 flex items-center text-xl">
+                  ${tx.amount.toFixed(2)}
                 </p>
               </div>
             </li>

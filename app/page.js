@@ -138,7 +138,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#03030E] to-[#2A2E48] w-full text-white p-6">
-      <header className="max-w-full mx-auto text-center mb-8 flex flex-row justify-around items-center px-4">
+      <header className="max-w-full mx-auto text-center mb-8 flex flex-row justify-around items-center px-4 ">
         <h1 className="text-4xl font-bold text-white mb-4">Propfirm Stats</h1>
         <div className="flex flex-row justify-end space-x-4 h-14">
           <PlaidButton
@@ -146,13 +146,13 @@ const HomePage = () => {
               console.log("Access Token Set in HomePage:", token); // Debugging
               setAccessToken(token);
             }}
-            className="font-semibold text-white rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2"
+            className="font-semibold text-white rounded-lg bg-gradient px-4 py-2"
           />
           <button
             onClick={fetchTransactions}
-            className={`font-semibold text-white rounded-lg px-4 py-2 ${
+            className={`font-semibold text-white  border-2 border-white rounded-lg px-4 py-2 ${
               accessToken
-                ? "bg-blue-600 hover:bg-blue-700"
+                ? "bg-gradient-to-r from-[#080a12] to-[#08083a8a]"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >
@@ -160,7 +160,7 @@ const HomePage = () => {
           </button>
           <button
             onClick={() => signOut()}
-            className="font-semibold text-white rounded-lg px-6 flex items-center justify-center  py-2 bg-red-600 hover:bg-red-700"
+            className="font-semibold  border-2 border-white text-white rounded-lg px-6 flex items-center justify-center py-2 bg-gradient-to-r from-[#080a12] to-[#08083a8a]"
           >
             <FaSignOutAlt className="mr-2" /> Logout
           </button>
