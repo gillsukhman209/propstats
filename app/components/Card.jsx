@@ -2,8 +2,11 @@ import React from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 
 function Card({ categories, merchant }) {
+  console.log(categories);
+  console.log(merchant);
+
   return (
-    <div className="mt-[100px] w-full sm:w-[48%] lg:w-[40%] xl:w-[35%] 3xl:w-[40%] max-w-4xl shadow-2xl m-6 rounded-2xl overflow-hidden">
+    <div className="mt-[100px]  w-full sm:w-[48%] lg:w-[40%] xl:w-[35%] 3xl:w-[40%] max-w-4xl shadow-2xl m-6 rounded-2xl overflow-hidden">
       <div
         key={merchant}
         className="p-6 md:p-8 h-full flex flex-col justify-center bg-gradient-to-b from-[#080a12] to-[#08083a8a] shadow-2xl border-2 border-white rounded-2xl"
@@ -18,6 +21,7 @@ function Card({ categories, merchant }) {
               ${categories.totals[merchant].toFixed(2)}
             </span>
           </div>
+
           <div className="text-gray-400 break-words">
             <span>Evals Total:</span>
             <span className="font-semibold block">
@@ -27,7 +31,7 @@ function Card({ categories, merchant }) {
           <div className="text-gray-400 break-words">
             <span>Payouts:</span>
             <span className="font-semibold block">
-              ${categories.notEvalTotals[merchant].toFixed(2)}
+              ${categories.notEvalTotals[merchant]}
             </span>
           </div>
         </div>

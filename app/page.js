@@ -10,33 +10,42 @@ import Card from "./components/Card";
 
 const HomePage = () => {
   const { data: session, status } = useSession();
-  const [accessToken, setAccessToken] = useState("");
-  const [transactions, setTransactions] = useState([]);
+  const [accessToken, setAccessToken] = useState(null);
   const [categories, setCategories] = useState({});
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+
   useEffect(() => {
     const handleUserAuthentication = async () => {
       if (status === "unauthenticated") {
-        signIn(); // Redirects to the login page
+        signIn();
       } else if (status === "authenticated" && session) {
         await addUserToDB();
-        await fetchTransactions();
+        await fetchSubscriptionStatus();
+        if (subscriptionStatus) {
+          await fetchTransactions();
+        }
       }
     };
 
-    handleUserAuthentication(); // Call the async function
-  }, [status, session]);
+    handleUserAuthentication();
+  }, [status, session, subscriptionStatus]);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const { data } = await axios.get(
+        `/api/stripe/get-subscription-status?email=${session?.user?.email}`
+      );
+      setSubscriptionStatus(data.subscriptionStatus);
+    } catch (error) {
+      console.error("Error fetching subscription status:", error.message);
+    }
+  };
 
   const addUserToDB = async () => {
-    console.log(
-      "about to add user to database",
-      session.user.email,
-      accessToken
-    );
     try {
       await axios.post("/api/mongo/createUser", {
         email: session?.user?.email,
-
-        accessToken: accessToken,
+        accessToken,
       });
     } catch (error) {
       console.error("Error adding user to DB:", error);
@@ -46,43 +55,34 @@ const HomePage = () => {
   const fetchTransactions = async () => {
     let tokenToUse = accessToken;
 
-    // If `accessToken` is empty or needs to be fetched from the database
-    if (!accessToken || accessToken === "empty access token") {
-      console.log("Fetching access token from database...");
+    if (!accessToken) {
       try {
         const res = await axios.get(
           `/api/mongo/getToken?email=${session?.user?.email}`
         );
-        console.log("Successfully fetched token:", res.data.accessToken);
-        tokenToUse = res.data.accessToken; // Use a local variable
-        setAccessToken(res.data.accessToken); // Update state for future use
+        tokenToUse = res.data.accessToken;
+        setAccessToken(tokenToUse);
       } catch (err) {
         console.error("Error fetching token:", err);
-        return; // Exit if token fetch fails
+        return;
       }
     }
-
-    console.log("Using Access Token:", tokenToUse);
 
     try {
       const res = await fetch("/api/plaid/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_token: tokenToUse, // Explicitly use the local variable
+          access_token: tokenToUse,
           start_date: "2000-01-01",
           end_date: "2024-11-17",
         }),
       });
 
       const data = await res.json();
-      console.log("Fetched transactions:", data);
-
       const updatedTransactions = [...customTransactions];
-      // const updatedTransactions = [...customTransactions, ...data];
-      console.log("Fetched and Merged Transactions:", updatedTransactions);
+      console.log("updated trans", updatedTransactions);
 
-      // Categorize transactions dynamically by merchant name
       const categorizedTransactions = {};
       updatedTransactions.forEach((transaction) => {
         const merchant = transaction.merchant_name || "Unknown Merchant";
@@ -133,10 +133,24 @@ const HomePage = () => {
     }
   };
 
-  if (status === "loading") {
+  if (status === "loading" || subscriptionStatus === null) {
     return (
       <div className="min-h-screen bg-gray-900 w-full text-white flex items-center justify-center">
         <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (subscriptionStatus !== true) {
+    return (
+      <div className="min-h-screen bg-gray-900 w-full text-white flex items-center justify-center">
+        <p>Please subscribe to access this content.</p>
+        <button
+          onClick={() => (window.location.href = "api/stripe")}
+          className="mt-4 shadow-2xl bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg"
+        >
+          Subscribe Now
+        </button>
       </div>
     );
   }
@@ -147,6 +161,7 @@ const HomePage = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-white">
           Propfirm Stats
         </h1>
+        <h1>Access token {accessToken} </h1>
         <div className="flex flex-wrap justify-center md:justify-end space-x-2 space-y-2 md:space-y-0">
           {!accessToken && (
             <PlaidButton
