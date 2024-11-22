@@ -44,7 +44,7 @@ function Card({ categories, merchant }) {
               <img
                 src={tx.logo_url || "https://via.placeholder.com/50"}
                 alt={tx.name}
-                className="w-20 h-16 rounded flex xs:hidden"
+                className="w-20 h-16 rounded hidden md:flex"
               />
               <div className="flex-grow overflow-hidden">
                 <h3 className="font-medium text-gray-800 truncate">
