@@ -19,6 +19,7 @@ export async function POST(req) {
       },
       { new: true }
     );
+    console.log("after updating user", User);
 
     return NextResponse.json(
       { message: "Payment status updated successfully." },

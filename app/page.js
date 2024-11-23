@@ -161,7 +161,7 @@ const HomePage = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-white">
           Propfirm Stats
         </h1>
-        <h1>Access token {accessToken} </h1>
+
         <div className="flex flex-wrap justify-center md:justify-end space-x-2 space-y-2 md:space-y-0">
           {!accessToken && (
             <PlaidButton

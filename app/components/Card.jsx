@@ -1,10 +1,6 @@
 import React from "react";
-import { FaSignOutAlt } from "react-icons/fa";
 
 function Card({ categories, merchant }) {
-  console.log(categories);
-  console.log(merchant);
-
   return (
     <div className="mt-[100px]  w-full sm:w-[48%] lg:w-[40%] xl:w-[35%] 3xl:w-[40%] max-w-4xl shadow-2xl m-6 rounded-2xl overflow-hidden">
       <div
